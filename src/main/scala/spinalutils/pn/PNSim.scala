@@ -6,8 +6,7 @@ import spinal.lib._
 import spinal.core.sim._
 import spinal.sim._
 
-case class PNSimWrapper(order: Int, init: BigInt, poly: BigInt, width: Int)
-    extends Component {
+case class PNSimWrapper(order: Int, init: BigInt, poly: BigInt, width: Int) extends Component {
   val io = new Bundle {
     val en = in(Bool())
     val flush = in(Bool())
@@ -59,7 +58,7 @@ object PNSim extends App {
 
     running = false
     check_thread.join()
-    
+
     dut.clockDomain.waitSampling(20)
   }
 }
