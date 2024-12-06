@@ -97,7 +97,7 @@ case class XadcConfig(
 
 case class Xadc(conf: XadcConfig) extends BlackBox with IXilinxIP {
 
-  setDefinitionName(f"xadc_wiz${conf.name}")
+  setDefinitionName(f"xadc_wiz_${conf.name}")
 
   val io = new Bundle {
     val s_drp = conf.interface == XadcInterfaceOptions.DRP generate slave(Drp()).setName("")
@@ -160,7 +160,7 @@ case class Xadc(conf: XadcConfig) extends BlackBox with IXilinxIP {
 
     val createCmd = f"""set xadcWizExist [lsearch -exact [get_ips xadc_wiz_*] xadc_wiz_${conf.name}]
 if { $$xadcWizExist <0} {
-  create_ip -name xadc_wiz -vendor xilinx.com -library ip -version 3.3 -module_name xadc_wiz${conf.name}
+  create_ip -name xadc_wiz -vendor xilinx.com -library ip -version 3.3 -module_name xadc_wiz_${conf.name}
 }"""
     tcls = tcls :+ createCmd
 
@@ -193,7 +193,7 @@ if { $$xadcWizExist <0} {
       if (x != "")
         property = property.concat(x) + " "
     }
-    property = property.concat(f"] [get_ips xadc_wiz${conf.name}]")
+    property = property.concat(f"] [get_ips xadc_wiz_${conf.name}]")
 
     tcls :+ property
   }
