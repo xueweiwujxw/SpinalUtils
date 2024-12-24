@@ -2,7 +2,7 @@ ThisBuild / version := "0.0.0"
 ThisBuild / scalaVersion := "2.12.18"
 ThisBuild / organization := "com.github.xueweiwujxw"
 
-val spinalVersion = "1.10.2a"
+val spinalVersion = "1.11.0"
 val spinalCore = "com.github.spinalhdl" %% "spinalhdl-core" % spinalVersion
 val spinalLib = "com.github.spinalhdl" %% "spinalhdl-lib" % spinalVersion
 val spinalIdslPlugin = compilerPlugin(
