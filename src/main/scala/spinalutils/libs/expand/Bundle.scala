@@ -39,18 +39,6 @@ trait IPadSingleDir[T <: IPadSingleDir[T]] extends Bundle with IMasterSlave with
     scala.math.ceil(this.bits.toDouble / busDataWidth.toDouble).toInt * (busDataWidth / 8)
 }
 
-case class DemodRFConfData(pad: Boolean = false) extends IPadSingleDir[DemodRFConfData] {
-
-  /** 射频接收载波频率 */
-  val freq_rf_rx = Bits(16 bits)
-
-  /** 使能，判断上升沿 */
-  val en = Bits(1 bits)
-
-  /** 补位 */
-  val __pad_0__ = pad generate B(0, 15 bits)
-}
-
 object IPadSingleDirDataTest extends App {
   case class IPadSingleDirData(pad: Boolean = false) extends IPadSingleDir[IPadSingleDirData] {
     val data = Bits(32 bits)
