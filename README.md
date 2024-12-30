@@ -27,3 +27,7 @@ This repository uses SpinalHDL to implement some FPGA algorithms, building scrip
 ### License
 
 ![GitHub License](https://img.shields.io/github/license/xueweiwujxw/SpinalUtils)
+
+#### Third Party License
+
+- [SpinalHDL Lib](./Licenses/SpinalHDL/LICENSE_lib)
