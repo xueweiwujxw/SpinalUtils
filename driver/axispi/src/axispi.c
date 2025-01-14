@@ -132,7 +132,7 @@ int axispi_ctrl_init(struct axispi_ctrl *ctrl, const struct axispi_config config
     if (ctrl == NULL)
         return -ENODEV;
 
-    ctrl->reg->config = (config.cpol & AXI_SPI_MODE_CPOL) | (config.cpha & AXI_SPI_MODE_CPHA);
+    ctrl->reg->config = (config.cpol & AXI_SPI_MODE_CPOL) | ((config.cpha << 1) & AXI_SPI_MODE_CPHA);
     ctrl->reg->status = (AXI_SPI_STATUS_CMD_INT_ENABLE) | (AXI_SPI_STATUS_RSP_INT_ENABLE);
     ctrl->reg->sclk_toggle = config.sclk_toggle;
     ctrl->reg->ss_setup = config.ss_setup;
