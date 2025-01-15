@@ -19,7 +19,8 @@ lazy val spinalUtils = (project in file("."))
       spinalLib,
       spinalIdslPlugin,
       scoptlib
-    )
+    ),
+    scalacOptions ++= Seq("-deprecation")
   )
 
 fork := true
