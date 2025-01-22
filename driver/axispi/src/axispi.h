@@ -43,7 +43,7 @@ typedef struct axispi_reg
 typedef struct axispi_config
 {
     u8 cpol;         // 空闲时钟极性，0 低电平 1高电平
-    u8 cpha;         // 采样时钟沿，0 上升沿采样，下降沿移位，1上升沿采样，下降沿移位
+    u8 cpha;         // 采样时钟沿，0 第一边沿采样，1 第二边沿采样
     u32 sclk_toggle; // 时钟分频，sclk = FCLK / (2 * (sclk_toggle + 1))
     u32 ss_setup;    // 片选有效到下一个字节传输前的时钟周期数
     u32 ss_hold;     // 最后一个字节传输完成到片段无效的时钟周期数
