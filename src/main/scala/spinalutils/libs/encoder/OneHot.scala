@@ -12,12 +12,33 @@ object OneHot {
 
     switch(oh) {
       for (i <- 0 until ohWidth)
-        is(B(i, ohWidth bits)) { bin := i }
+        is(B(1 << i, ohWidth bits)) { bin := i }
       default { bin := 0 }
-
     }
 
     bin
+  }
+
+  def oneHot2BinSecure[T <: Data](onehot: T): (UInt, Bool) = {
+    val ohWidth = onehot.getBitsWidth
+    val binWidth = log2Up(ohWidth)
+    val oh = onehot.asBits
+    val bin = UInt(binWidth bits)
+    val valid = Bool()
+
+    switch(oh) {
+      for (i <- 0 until ohWidth)
+        is(B(1 << i, ohWidth bits)) {
+          bin := i
+          valid := True
+        }
+      default {
+        bin := 0
+        valid := False
+      }
+    }
+
+    (bin, valid)
   }
 
   def bin2OneHot[T <: Data](binary: T): Bits = {
@@ -50,8 +71,21 @@ object OneHotExampleGen extends App {
     io.bin := OneHot.oneHot2Bin(io.oh).asBits
   }
 
+  case class OneHot2BinSecureExample() extends Component {
+    val io = new Bundle {
+      val oh = in(Bits(8 bits))
+      val bin = out(Bits(3 bits))
+      val valid = out(Bool())
+    }
+
+    val binSecure = OneHot.oneHot2BinSecure(io.oh)
+    io.bin := binSecure._1.asBits
+    io.valid := binSecure._2
+  }
+
   SpinalVerilog(Bin2OneHotExample())
 
   SpinalVerilog(OneHot2BinExample())
-}
 
+  SpinalVerilog(OneHot2BinSecureExample())
+}
