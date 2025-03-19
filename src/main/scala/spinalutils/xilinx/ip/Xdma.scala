@@ -5,21 +5,13 @@ import spinal.lib._
 import spinal.lib.bus.amba4.axis._
 import spinal.lib.bus.amba4.axi._
 import spinal.lib.blackbox.xilinx.s7._
+import spinalutils.libs.renamer.NameProcess._
 
 object MoveNumberToEnd {
-  def replaceAndMoveToEnd(input: String): String = {
-    val pattern = "_\\d+".r
-    // 使用正则表达式查找并分离匹配的子字符串
-    val (matches, modifiedString) =
-      pattern.findAllIn(input).toList.foldLeft((List.empty[String], input)) { case ((m, s), sub) =>
-        (m :+ sub, s.replace(sub, ""))
-      }
-    modifiedString + matches.mkString // 将匹配的子字符串追加到末尾
-  }
   def apply[T <: Data](that: Stream[T]): Stream[T] = {
     def doIt = {
       that.flatten.foreach((bt) => {
-        bt.setName(replaceAndMoveToEnd(bt.getName()))
+        bt.setName(replaceAndMoveToEnd("_\\d+".r, bt.getName()))
       })
     }
     if (Component.current == that.component)
