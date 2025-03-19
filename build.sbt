@@ -1,4 +1,4 @@
-ThisBuild / version := "0.1.1"
+ThisBuild / version := "0.1.2"
 ThisBuild / scalaVersion := "2.12.18"
 ThisBuild / organization := "com.github.xueweiwujxw"
 
@@ -9,17 +9,15 @@ val spinalIdslPlugin = compilerPlugin(
   "com.github.spinalhdl" %% "spinalhdl-idsl-plugin" % spinalVersion
 )
 
-val scoptlib = "com.github.scopt" %% "scopt" % "4.1.0"
-
 lazy val spinalUtils = (project in file("."))
   .settings(
     name := "spinalUtils",
     libraryDependencies ++= Seq(
       spinalCore,
       spinalLib,
-      spinalIdslPlugin,
-      scoptlib
-    )
+      spinalIdslPlugin
+    ),
+    scalacOptions ++= Seq("-deprecation")
   )
 
 fork := true

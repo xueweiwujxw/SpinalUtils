@@ -39,10 +39,10 @@ if { $$vioExit <0} {
 
     var i = 0
     probes.map { x =>
-      tcl.write(" CONFIG.C_PROBE_OUT" + i + "_WIDTH {" + x + "}")
-      tcl.write(" CONFIG.C_PROBE_OUT" + i + "_INIT_VAL {" + inits(i).formatted("0x%x") + "}")
-      PrintTcl(" CONFIG.C_PROBE_OUT" + i + "_WIDTH {" + x + "}")
-      PrintTcl(" CONFIG.C_PROBE_OUT" + i + "_INIT_VAL {" + inits(i).formatted("0x%x") + "}")
+      tcl.write(s" CONFIG.C_PROBE_OUT${i}_WIDTH {$x}")
+      tcl.write(f" CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${inits(i)}%x}")
+      PrintTcl(s" CONFIG.C_PROBE_OUT${i}_WIDTH {$x}")
+      PrintTcl(f" CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${inits(i)}%x}")
       i = i + 1
     }
     tcl.write(
