@@ -29,90 +29,61 @@ class ila(ilaname: String, probes: List[Int]) extends BlackBox {
 
 object ila {
   def outTCLwithDepth(name: String, depth: Int, probes: List[Int]) = {
-    val tcl = new PrintWriter(new File("vivadoIla_" + name + ".tcl"))
 
     val createIlaCmd = f"""set ilaExit [lsearch -exact [get_ips ila*] ila_${name}]
 if { $$ilaExit <0} {
   create_ip -name ila -vendor xilinx.com -library ip -module_name ila_${name}
 }\n"""
-    tcl.write(createIlaCmd)
-    tcl.write("set_property -dict [list CONFIG.C_DATA_DEPTH {" + depth + "}")
     PrintTcl(createIlaCmd)
     PrintTcl("set_property -dict [list CONFIG.C_DATA_DEPTH {" + depth + "}")
 
     var i = 0
     probes.map { x =>
-      tcl.write(" CONFIG.C_PROBE" + i + "_WIDTH {" + x + "}")
       PrintTcl(" CONFIG.C_PROBE" + i + "_WIDTH {" + x + "}")
       i = i + 1
     }
-    tcl.write(
-      " CONFIG.C_NUM_OF_PROBES {" + i + "}] [get_ips ila_" + name + "]\n"
-    )
     PrintTcl(
       " CONFIG.C_NUM_OF_PROBES {" + i + "}] [get_ips ila_" + name + "]\n"
     )
 
-    tcl.write(
-      "set_property -dict [list CONFIG.C_EN_STRG_QUAL {1} CONFIG.C_ADV_TRIGGER {true} CONFIG.ALL_PROBE_SAME_MU_CNT {2} "
-    )
     PrintTcl(
       "set_property -dict [list CONFIG.C_EN_STRG_QUAL {1} CONFIG.C_ADV_TRIGGER {true} CONFIG.ALL_PROBE_SAME_MU_CNT {2} "
     )
 
     probes.zipWithIndex.map { case (x, i) =>
-      tcl.write(" CONFIG.C_PROBE" + i + "_MU_CNT {2}")
       PrintTcl(" CONFIG.C_PROBE" + i + "_MU_CNT {2}")
     }
-    tcl.write("] [get_ips ila_" + name + "]\n\n")
     PrintTcl("] [get_ips ila_" + name + "]\n\n")
 
     PrintTcl(f"synth_ip [get_ips ila_${name}]\n", 1)
-
-    tcl.close()
   }
 
   def outTCL(name: String, probes: List[Int], advancedTrigger: Boolean = false) = {
-    val tcl = new PrintWriter(new File("vivadoIla_" + name + ".tcl"))
-
     val createIlaCmd = f"""set ilaExit [lsearch -exact [get_ips ila*] ila_${name}]
 if { $$ilaExit <0} {
   create_ip -name ila -vendor xilinx.com -library ip -module_name ila_${name}
 }\n"""
-    tcl.write(createIlaCmd)
-    tcl.write("set_property -dict [list")
     PrintTcl(createIlaCmd)
     PrintTcl("set_property -dict [list")
 
     var i = 0
     probes.map { x =>
-      tcl.write(" CONFIG.C_PROBE" + i + "_WIDTH {" + x + "}")
       PrintTcl(" CONFIG.C_PROBE" + i + "_WIDTH {" + x + "}")
       i = i + 1
     }
-    tcl.write(
-      " CONFIG.C_NUM_OF_PROBES {" + i + "}] [get_ips ila_" + name + "]\n"
-    )
     PrintTcl(
       " CONFIG.C_NUM_OF_PROBES {" + i + "}] [get_ips ila_" + name + "]\n"
     )
 
     if (advancedTrigger) {
-      tcl.write(
-        "set_property -dict [list CONFIG.C_EN_STRG_QUAL {1} CONFIG.C_ADV_TRIGGER {true} CONFIG.ALL_PROBE_SAME_MU_CNT {2} "
-      )
       PrintTcl(
         "set_property -dict [list CONFIG.C_EN_STRG_QUAL {1} CONFIG.C_ADV_TRIGGER {true} CONFIG.ALL_PROBE_SAME_MU_CNT {2} "
       )
       probes.zipWithIndex.map { case (x, i) =>
-        tcl.write(" CONFIG.C_PROBE" + i + "_MU_CNT {2}")
         PrintTcl(" CONFIG.C_PROBE" + i + "_MU_CNT {2}")
       }
-      tcl.write("] [get_ips ila_" + name + "]\n\n")
       PrintTcl("] [get_ips ila_" + name + "]\n\n")
     }
-
-    tcl.close()
   }
 
   def apply[T <: Data](name: String, advancedTrigger: Boolean, signals: T*) = {

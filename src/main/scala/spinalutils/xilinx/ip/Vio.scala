@@ -26,35 +26,24 @@ class vio(vioname: String, probes: List[Int]) extends BlackBox {
 
 object vio {
   def outTCL(name: String, probes: List[Int], inits: List[BigInt]) = {
-    val tcl = new PrintWriter(new File("vivadoVio_" + name + ".tcl"))
-
     val createVioCmd = f"""set vioExit [lsearch -exact [get_ips vio*] vio_${name}]
 if { $$vioExit <0} {
   create_ip -name vio -vendor xilinx.com -library ip -module_name vio_${name}
 }\n"""
-    tcl.write(createVioCmd)
-    tcl.write("set_property -dict [list")
     PrintTcl(createVioCmd)
     PrintTcl("set_property -dict [list")
 
     var i = 0
     probes.map { x =>
-      tcl.write(s" CONFIG.C_PROBE_OUT${i}_WIDTH {$x}")
-      tcl.write(f" CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${inits(i)}%x}")
       PrintTcl(s" CONFIG.C_PROBE_OUT${i}_WIDTH {$x}")
       PrintTcl(f" CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${inits(i)}%x}")
       i = i + 1
     }
-    tcl.write(
-      " CONFIG.C_NUM_PROBE_OUT {" + i + "} CONFIG.C_EN_PROBE_IN_ACTIVITY {0} CONFIG.C_NUM_PROBE_IN {0}] [get_ips vio_" + name + "]\n\n"
-    )
     PrintTcl(
       " CONFIG.C_NUM_PROBE_OUT {" + i + "} CONFIG.C_EN_PROBE_IN_ACTIVITY {0} CONFIG.C_NUM_PROBE_IN {0}] [get_ips vio_" + name + "]\n\n"
     )
 
     PrintTcl(f"synth_ip [get_ips vio_${name}]\n", 1)
-
-    tcl.close()
   }
 
   def apply[T <: Data](name: String, signals: T*) = {

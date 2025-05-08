@@ -68,9 +68,6 @@ if { $$wizExit <0} {
 set_property -dict [list${dualString}CONFIG.PRIM_IN_FREQ {${freqin}} ${clkcmd}CONFIG.USE_LOCKED {true} CONFIG.USE_RESET {false}] [get_ips clk_wiz_${wizname}]\n\n"""
 
   this.setDefinitionName("clk_wiz_" + wizname)
-  val tcl = new PrintWriter(new File("vivadoclk_" + wizname + ".tcl"))
-  tcl.write(createCmd)
-  tcl.close()
   PrintTcl(createCmd)
 
   noIoPrefix()
