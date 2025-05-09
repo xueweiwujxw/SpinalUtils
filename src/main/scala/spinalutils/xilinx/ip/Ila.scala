@@ -3,102 +3,99 @@ package spinalutils.xilinx.ip
 import spinal.core._
 import spinal.lib._
 
-import java.io._
-import scala.io.Source
+object IlaTriggerOptions extends SpinalEnum(binarySequential) {
+  val DATA_AND_TRIGGER, DATA, TRIGGER = newElement()
+}
 
-import java.nio.file.Paths
-import scala.collection.mutable.ArrayBuffer
+case class IlaConfig(
+    name: String,
+    probes: List[Int],
+    depth: Int,
+    captureControl: Boolean = true,
+    advancedTrigger: Boolean = true,
+    sameComparators: Boolean = true,
+    comparator: Int = 2,
+    comparators: List[Int] = null,
+    triggerOptions: List[IlaTriggerOptions.E] = null
+) {
+  if (!sameComparators)
+    require(comparators != null && comparators.length == probes.length)
+  if (triggerOptions != null)
+    require(triggerOptions.length == probes.length)
+}
 
-class ila(ilaname: String, probes: List[Int]) extends BlackBox {
-  var i = 0
+case class Ila(conf: IlaConfig) extends BlackBox with IXilinxIP {
+  setDefinitionName(f"ila_${conf.name}")
+
   val io = new Bundle {
-    val clk = in Bool ()
-    val probe = probes.map { x =>
-      val ret = in Bits (x bits)
+    val clk = in(Bool())
+    val probe = conf.probes.zipWithIndex.map { case (w, i) =>
+      val ret = in(Bits(w bits))
       ret.setName(f"probe${i}")
-      i = i + 1
       ret
     }
   }
 
   mapCurrentClockDomain(io.clk)
   noIoPrefix()
-  this.setDefinitionName("ila_" + ilaname)
-  println("name:ila_" + ilaname + ",width:" + probes)
+
+  override def displayInfo(): Unit = {
+    println(f"name:ila_${conf.name}, width: ${conf.probes}")
+  }
+
+  def generateTcl(): List[String] = {
+    var tcls: List[String] = List()
+
+    val createCmd = f"""set ilaExit [lsearch -exact [get_ips ila*] ila_${conf.name}]
+if { $$ilaExit <0 } {
+  create_ip -name ila -vendor xilinx.com -library ip -module_name ila_${conf.name}
+}"""
+    tcls = tcls :+ createCmd
+
+    var property: String = "set_property -dict [list "
+    var properties: List[String] = List()
+
+    properties = properties :+ f"CONFIG.C_DATA_DEPTH {${conf.depth}}"
+    conf.probes.zipWithIndex.map { case (w, i) =>
+      properties = properties :+ f"CONFIG.C_PROBE${i}_WIDTH {${w}}"
+    }
+    properties = properties :+ f"CONFIG.C_NUM_OF_PROBES {${conf.probes.length}}"
+
+    properties = properties :+ f"CONFIG.ALL_PROBE_SAME_MU {${conf.sameComparators}}"
+    if (conf.sameComparators) {
+      properties = properties :+ f"CONFIG.ALL_PROBE_SAME_MU_CNT {${conf.comparator}}"
+    } else {
+      conf.comparators.zipWithIndex.map { case (c, i) =>
+        properties = properties :+ f"CONFIG.C_PROBE${i}_MU_CNT {${c}}"
+      }
+    }
+
+    if (conf.triggerOptions != null) {
+      conf.triggerOptions.zipWithIndex.map { case (t, i) =>
+        properties = properties :+ f"CONFIG.C_PROBE${i}_TYPE {${t.position}}"
+      }
+    }
+
+    properties = properties :+ f"CONFIG.C_ADV_TRIGGER {${conf.advancedTrigger}}"
+    properties = properties :+ f"CONFIG.C_EN_STRG_QUAL {${conf.captureControl.toInt}}"
+
+    properties.foreach { x =>
+      if (x != "")
+        property = property.concat(x) + " "
+    }
+    property = property.concat(f"] [get_ips ila_${conf.name}]")
+
+    tcls :+ property
+  }
+
+  def generateXdc(): List[String] = {
+    var xdcs: List[String] = List()
+
+    xdcs
+  }
 }
 
-object ila {
-  def outTCLwithDepth(name: String, depth: Int, probes: List[Int]) = {
-
-    val createIlaCmd = f"""set ilaExit [lsearch -exact [get_ips ila*] ila_${name}]
-if { $$ilaExit <0} {
-  create_ip -name ila -vendor xilinx.com -library ip -module_name ila_${name}
-}\n"""
-    PrintTcl(createIlaCmd)
-    PrintTcl("set_property -dict [list CONFIG.C_DATA_DEPTH {" + depth + "}")
-
-    var i = 0
-    probes.map { x =>
-      PrintTcl(" CONFIG.C_PROBE" + i + "_WIDTH {" + x + "}")
-      i = i + 1
-    }
-    PrintTcl(
-      " CONFIG.C_NUM_OF_PROBES {" + i + "}] [get_ips ila_" + name + "]\n"
-    )
-
-    PrintTcl(
-      "set_property -dict [list CONFIG.C_EN_STRG_QUAL {1} CONFIG.C_ADV_TRIGGER {true} CONFIG.ALL_PROBE_SAME_MU_CNT {2} "
-    )
-
-    probes.zipWithIndex.map { case (x, i) =>
-      PrintTcl(" CONFIG.C_PROBE" + i + "_MU_CNT {2}")
-    }
-    PrintTcl("] [get_ips ila_" + name + "]\n\n")
-
-    PrintTcl(f"synth_ip [get_ips ila_${name}]\n", 1)
-  }
-
-  def outTCL(name: String, probes: List[Int], advancedTrigger: Boolean = false) = {
-    val createIlaCmd = f"""set ilaExit [lsearch -exact [get_ips ila*] ila_${name}]
-if { $$ilaExit <0} {
-  create_ip -name ila -vendor xilinx.com -library ip -module_name ila_${name}
-}\n"""
-    PrintTcl(createIlaCmd)
-    PrintTcl("set_property -dict [list")
-
-    var i = 0
-    probes.map { x =>
-      PrintTcl(" CONFIG.C_PROBE" + i + "_WIDTH {" + x + "}")
-      i = i + 1
-    }
-    PrintTcl(
-      " CONFIG.C_NUM_OF_PROBES {" + i + "}] [get_ips ila_" + name + "]\n"
-    )
-
-    if (advancedTrigger) {
-      PrintTcl(
-        "set_property -dict [list CONFIG.C_EN_STRG_QUAL {1} CONFIG.C_ADV_TRIGGER {true} CONFIG.ALL_PROBE_SAME_MU_CNT {2} "
-      )
-      probes.zipWithIndex.map { case (x, i) =>
-        PrintTcl(" CONFIG.C_PROBE" + i + "_MU_CNT {2}")
-      }
-      PrintTcl("] [get_ips ila_" + name + "]\n\n")
-    }
-  }
-
-  def apply[T <: Data](name: String, advancedTrigger: Boolean, signals: T*) = {
-    val signalWidths = signals.map(B(_).getWidth).toList
-    val vividoIla = new ila(name, signalWidths)
-
-    vividoIla.io.probe.zip(signals).foreach { case (probei, s) =>
-      probei := (s.asBits).setName(s.getName() + "_b", true)
-    }
-
-    outTCL(name, signalWidths, advancedTrigger)
-
-    vividoIla
-  }
-
+object Ila {
   def apply[T <: Data](name: String, depth: Int, signals: T*) = {
     val signalConvert = signals.flatMap(s =>
       s match {
@@ -108,30 +105,37 @@ if { $$ilaExit <0} {
       }
     )
     val signalWidths = signalConvert.map(B(_).getWidth).toList
-    val vividoIla = new ila(name, signalWidths)
+    val ila = new Ila(
+      IlaConfig(
+        name = name,
+        probes = signalWidths,
+        depth = 1024
+      )
+    )
+    ila.setName(f"${name}_ila")
 
-    vividoIla.io.probe.zip(signalConvert).foreach { case (probei, s) =>
+    ila.io.probe.zip(signalConvert).foreach { case (probei, s) =>
       probei := (s.asBits).setName(s.getName(), true)
     }
 
-    outTCLwithDepth(name, depth, signalWidths)
-
-    vividoIla
+    ila
   }
 
-  def apply[T <: Data](
-      name: String,
-      depth: Int,
-      signalList: List[T]
-  ) = {
-    val signalWidths = signalList.map(B(_).getWidth).toList
-    val vivadoIla = new ila(name, signalWidths)
+  def apply[T <: Data](name: String, depth: Int, signals: List[T]) = {
+    val signalWidths = signals.map(B(_).getWidth).toList
+    val ila = new Ila(
+      IlaConfig(
+        name = name,
+        probes = signalWidths,
+        depth = 1024
+      )
+    )
+    ila.setName(f"${name}_ila")
 
-    vivadoIla.io.probe.zip(signalList).foreach { case (probei, s) =>
-      probei := (s.asBits).setName(s.getName() + "_b", true)
+    ila.io.probe.zip(signals).foreach { case (probei, s) =>
+      probei := (s.asBits).setName(s.getName(), true)
     }
 
-    outTCLwithDepth(name, depth, signalWidths)
-    vivadoIla
+    ila
   }
 }
