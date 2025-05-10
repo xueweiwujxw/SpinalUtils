@@ -65,7 +65,7 @@ if { $$vioExit <0} {
     }
 
     properties = properties :+ f"CONFIG.C_NUM_PROBE_OUT {${conf.outProbes.length}}"
-    conf.inProbes.zip(conf.outInits).zipWithIndex.map { case ((w, init), i) =>
+    conf.outProbes.zip(conf.outInits).zipWithIndex.map { case ((w, init), i) =>
       properties = properties :+ f"CONFIG.C_PROBE_OUT${i}_WIDTH {${w}}"
       properties = properties :+ f"CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${init}%x}"
     }
