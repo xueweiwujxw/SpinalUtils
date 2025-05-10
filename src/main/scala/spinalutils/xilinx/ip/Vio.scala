@@ -5,58 +5,88 @@ import spinal.core._
 import java.nio.file.Paths
 import java.io._
 
-class vio(vioname: String, probes: List[Int]) extends BlackBox {
-  var i = 0
+case class VioConfig(
+    name: String,
+    outProbes: List[Int],
+    outInits: List[BigInt] = null,
+    inProbes: List[Int] = List(),
+    inProbeActiveDetector: Boolean = true
+) {
+  if (outInits != null)
+    require(outProbes.length == outInits.length)
+}
+
+case class Vio(conf: VioConfig) extends BlackBox with IXilinxIP {
+  setDefinitionName(f"vio_${conf.name}")
+
   val io = new Bundle {
     val clk = in Bool ()
-    val probe_out = probes.map { x =>
-      val ret = out Bits (x bits)
+    val probe_out = conf.outProbes.zipWithIndex.map { case (w, i) =>
+      val ret = out(Bits(w bits))
       ret.setName(f"probe_out${i}")
-      i = i + 1
+      ret
+    }
+    val probe_in = conf.inProbes.length != 0 generate conf.inProbes.zipWithIndex.map { case (w, i) =>
+      val ret = in(Bits(w bits))
+      ret.setName(f"probe_in${i}")
       ret
     }
   }
 
   mapCurrentClockDomain(io.clk)
   noIoPrefix()
-  this.setDefinitionName("vio_" + vioname)
-  println("name:vio_" + vioname + ",width:" + probes)
 
-}
-
-object vio {
-  def outTCL(name: String, probes: List[Int], inits: List[BigInt]) = {
-    val tcl = new PrintWriter(new File("vivadoVio_" + name + ".tcl"))
-
-    val createVioCmd = f"""set vioExit [lsearch -exact [get_ips vio*] vio_${name}]
-if { $$vioExit <0} {
-  create_ip -name vio -vendor xilinx.com -library ip -module_name vio_${name}
-}\n"""
-    tcl.write(createVioCmd)
-    tcl.write("set_property -dict [list")
-    PrintTcl(createVioCmd)
-    PrintTcl("set_property -dict [list")
-
-    var i = 0
-    probes.map { x =>
-      tcl.write(s" CONFIG.C_PROBE_OUT${i}_WIDTH {$x}")
-      tcl.write(f" CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${inits(i)}%x}")
-      PrintTcl(s" CONFIG.C_PROBE_OUT${i}_WIDTH {$x}")
-      PrintTcl(f" CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${inits(i)}%x}")
-      i = i + 1
-    }
-    tcl.write(
-      " CONFIG.C_NUM_PROBE_OUT {" + i + "} CONFIG.C_EN_PROBE_IN_ACTIVITY {0} CONFIG.C_NUM_PROBE_IN {0}] [get_ips vio_" + name + "]\n\n"
+  override def displayInfo(): Unit = {
+    println(
+      f"name:vio_${conf.name}, out_width: ${conf.outProbes}${if (conf.inProbes != 0)
+          f", in_width: ${conf.inProbes}"
+        else ""}"
     )
-    PrintTcl(
-      " CONFIG.C_NUM_PROBE_OUT {" + i + "} CONFIG.C_EN_PROBE_IN_ACTIVITY {0} CONFIG.C_NUM_PROBE_IN {0}] [get_ips vio_" + name + "]\n\n"
-    )
-
-    PrintTcl(f"synth_ip [get_ips vio_${name}]\n", 1)
-
-    tcl.close()
   }
 
+  def generateTcl(): List[String] = {
+    var tcls: List[String] = List()
+
+    val createCmd = f"""set vioExit [lsearch -exact [get_ips vio*] vio_${conf.name}]
+if { $$vioExit <0} {
+  create_ip -name vio -vendor xilinx.com -library ip -module_name vio_${conf.name}
+}"""
+    tcls = tcls :+ createCmd
+
+    var property: String = "set_property -dict [list "
+    var properties: List[String] = List()
+
+    if (conf.inProbes.length != 0)
+      properties = properties :+ f"CONFIG.C_EN_PROBE_IN_ACTIVITY {${conf.inProbeActiveDetector.toInt}}"
+
+    properties = properties :+ f"CONFIG.C_NUM_PROBE_IN {${conf.inProbes.length}}"
+    conf.inProbes.zipWithIndex.map { case (w, i) =>
+      properties = properties :+ f"CONFIG.C_PROBE_IN${i}_WIDTH {${w}}"
+    }
+
+    properties = properties :+ f"CONFIG.C_NUM_PROBE_OUT {${conf.outProbes.length}}"
+    conf.outProbes.zip(conf.outInits).zipWithIndex.map { case ((w, init), i) =>
+      properties = properties :+ f"CONFIG.C_PROBE_OUT${i}_WIDTH {${w}}"
+      properties = properties :+ f"CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${init}%x}"
+    }
+
+    properties.foreach { x =>
+      if (x != "")
+        property = property.concat(x) + " "
+    }
+    property = property.concat(f"] [get_ips vio_${conf.name}]")
+
+    tcls :+ property
+  }
+
+  def generateXdc(): List[String] = {
+    var xdcs: List[String] = List()
+
+    xdcs
+  }
+}
+
+object Vio {
   def apply[T <: Data](name: String, signals: T*) = {
     val signalConvert = signals.flatMap(s => {
       s match {
@@ -68,9 +98,10 @@ if { $$vioExit <0} {
 
     val signalWidths = signalConvert.map(B(_).getBitsWidth).toList
     val inits = signalWidths.map(_ => BigInt(0))
-    val vivadoVio = new vio(name, signalWidths)
+    val vio = new Vio(VioConfig(name = name, outProbes = signalWidths))
+    vio.setName(f"${name}_vio")
 
-    vivadoVio.io.probe_out.zip(signalConvert).foreach { case (probeo, s) =>
+    vio.io.probe_out.zip(signalConvert).foreach { case (probeo, s) =>
       s match {
         case bits_v: Bits =>
           bits_v := probeo.asBits
@@ -84,12 +115,10 @@ if { $$vioExit <0} {
       }
     }
 
-    outTCL(name, signalWidths, inits)
-
-    vivadoVio
+    vio
   }
 
-  def apply[T <: Data](name: String, signalWidths: List[Int], inits: List[_]): vio = {
+  def apply[T <: Data](name: String, signalWidths: List[Int], inits: List[_]) = {
     require(signalWidths.length == inits.length, "signalWidths length must match inits length")
     val bigInits = inits match {
       case list: List[_] if list.forall(_.isInstanceOf[BigInt]) =>
@@ -106,10 +135,9 @@ if { $$vioExit <0} {
       require(init.bitLength <= width, f"init value ${init} is out of range of width ${width}")
     }
 
-    val vivadoVio = new vio(name, signalWidths)
+    val vio = new Vio(VioConfig(name = name, outProbes = signalWidths, outInits = bigInits))
+    vio.setName(f"${name}_vio")
 
-    outTCL(name, signalWidths, bigInits)
-
-    vivadoVio
+    vio
   }
 }
