@@ -33,12 +33,19 @@ object Aurora8b10bFlowCtrlMode extends SpinalEnum(binarySequential) {
   UFC_COMPLETION_NFC.setName("UFC+ Completion NFC")
 }
 
+object Aurora8b10bColumns extends SpinalEnum(binarySequential) {
+  val LEFT, RIGHT = newElement()
+  LEFT.setName("left")
+  RIGHT.setName("right")
+}
+
 case class LaneLoc(postion: Int = 1, setValue: String = "1") {
-  require(postion >= 1 && postion <= 16)
+  require(postion >= 1)
   require(
-    (setValue.matches("^\\d+$") && setValue.toInt >= 1 && setValue.toInt <= 16) || setValue == "X"
+    (setValue.matches("^\\d+$") && setValue.toInt >= 1) || setValue == "X"
   )
-  def valid = setValue.matches("^\\d+$") && setValue.toInt >= 1 && setValue.toInt <= 16
+  def valid(maxLoc: Int = 16) =
+    setValue.matches("^\\d+$") && setValue.toInt >= 1 && setValue.toInt <= maxLoc
 }
 
 case class Aurora8b10bConfig(
@@ -54,6 +61,8 @@ case class Aurora8b10bConfig(
     scramber: Boolean = false,
     littleEndian: Boolean = false,
     crc: Boolean = false,
+    column: Aurora8b10bColumns.E = null,
+    maxLoc: Int = 16,
     laneLoc: List[LaneLoc] = List(LaneLoc(1, "1")),
     incore: Boolean = false,
     initClkSingleEnd: Boolean = false,
@@ -92,7 +101,7 @@ case class Aurora8b10bConfig(
 
   require(gtClock.length >= 1 && gtClock.length <= 2, "gt clocks num supports [1,2]")
 
-  def lanes = laneLoc.map(f => f.valid.toInt).reduceBalancedTree(_ + _)
+  def lanes = laneLoc.map(f => f.valid(maxLoc = maxLoc).toInt).reduceBalancedTree(_ + _)
 
   def axisConf =
     Axi4StreamConfig(dataWidth = laneWidth * lanes, useKeep = frameMode, useLast = frameMode)
@@ -156,9 +165,7 @@ protected case class DrpPort(num: Int = 1) extends Bundle with IMasterSlave {
   }
 }
 
-protected case class QPLLPort(incore: Boolean = false, locs: List[LaneLoc])
-    extends Bundle
-    with IMasterSlave {
+protected case class QPLLPort(incore: Boolean = false, locs: List[LaneLoc]) extends Bundle with IMasterSlave {
   var parts: Set[Int] = Set()
   locs.foreach(f => {
     if (f.setValue != "X") {
@@ -219,9 +226,7 @@ protected case class QPLLPort(incore: Boolean = false, locs: List[LaneLoc])
         qpllreset_out.foreach(bt => changebt("_qpllreset_out_".r, bt, "_qpllreset_out"))
       } else {
         qplllock_out.foreach(bt => changebt("_qplllock_out_".r, bt, "_qplllock_out"))
-        qpllrefclklost_out.foreach(bt =>
-          changebt("_qpllrefclklost_out_".r, bt, "_qpllrefclklost_out")
-        )
+        qpllrefclklost_out.foreach(bt => changebt("_qpllrefclklost_out_".r, bt, "_qpllrefclklost_out"))
         qpllclk_quad_out.zipWithIndex.foreach { case (bt, i) =>
           changebt("_out_\\d+".r, bt, partsArr(i).toString().concat("_out"))
         }
@@ -238,9 +243,7 @@ protected case class QPLLPort(incore: Boolean = false, locs: List[LaneLoc])
   }
 }
 
-protected case class GtRefClkPort(num: Int = 1, singleEnd: Boolean = false)
-    extends Bundle
-    with IMasterSlave {
+protected case class GtRefClkPort(num: Int = 1, singleEnd: Boolean = false) extends Bundle with IMasterSlave {
   val refclk = singleEnd generate Vec(Bool(), num)
   val refclk_diff = !singleEnd generate Vec(DiffSignal(), num).setPartialName("refclk")
   val refclk_out = !singleEnd generate Vec(Bool(), num)
@@ -284,7 +287,7 @@ protected case class GtRefClkPort(num: Int = 1, singleEnd: Boolean = false)
   }
 }
 
-case class Aurora8b10bZynq(config: Aurora8b10bConfig) extends BlackBox with IXilinxIP {
+case class Aurora8b10b(config: Aurora8b10bConfig) extends BlackBox with IXilinxIP {
   setDefinitionName(f"aurora_8b10b_${config.name}")
   val io = new Bundle {
 
@@ -352,6 +355,7 @@ case class Aurora8b10bZynq(config: Aurora8b10bConfig) extends BlackBox with IXil
     val user_clk = !config.incore generate in(Bool())
     val sync_clk = !config.incore generate in(Bool())
     val sys_reset_out = out(Bool())
+    val tx_out_clk = !config.incore generate out(Bool())
 
     /** QPLL control out Ports */
     val gt_qpll = slave(QPLLPort(config.incore, config.laneLoc)).setName("gt")
@@ -384,15 +388,16 @@ if { $$aurora8b10bExist <0} {
     properties = properties :+ f"CONFIG.C_USE_SCRAMBLER {${config.scramber}}"
     properties = properties :+ f"CONFIG.C_USE_CRC {${config.crc}}"
     properties = properties :+ f"CONFIG.C_USE_BYTESWAP {${config.littleEndian}}"
+    if (config.column != null)
+      properties = properties :+ f"CONFIG.C_COLUMN_USED {${config.column}}"
     properties = properties :+ f"CONFIG.C_AURORA_LANES {${config.lanes}}"
 
     for (i <- 0 until config.gtClock.length)
       properties = properties :+ f"CONFIG.C_GT_CLOCK_${i + 1} {${config.gtClock(i)}}"
 
-    var locSet = Set(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+    var locSet = (1 to config.maxLoc).toSet
     for (i <- 0 until config.laneLoc.length) {
-      properties =
-        properties :+ f"CONFIG.C_GT_LOC_${config.laneLoc(i).postion} {${config.laneLoc(i).setValue}}"
+      properties = properties :+ f"CONFIG.C_GT_LOC_${config.laneLoc(i).postion} {${config.laneLoc(i).setValue}}"
       locSet -= config.laneLoc(i).postion
     }
     locSet.foreach(f => properties = properties :+ f"CONFIG.C_GT_LOC_${f} {X}")
