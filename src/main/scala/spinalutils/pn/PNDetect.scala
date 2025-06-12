@@ -107,11 +107,3 @@ object PNDetect {
   def apply(order: Int, poly: BigInt, inWidth: Int): PNDetect =
     new PNDetect(order = order, poly = poly, inWidth = inWidth)
 }
-
-object PNDetectExample extends App {
-  SpinalConfig()
-    .generateVerilog(
-      PNDetect(order = 23, poly = 0x800021, inWidth = 8)
-    )
-    .printPruned()
-}

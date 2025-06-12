@@ -2,6 +2,8 @@ ThisBuild / version := "0.1.4"
 ThisBuild / scalaVersion := "2.12.18"
 ThisBuild / organization := "io.github.xueweiwujxw"
 
+publishMavenStyle := true
+
 val spinalVersion = "1.12.2"
 val spinalCore = "com.github.spinalhdl" %% "spinalhdl-core" % spinalVersion
 val spinalLib = "com.github.spinalhdl" %% "spinalhdl-lib" % spinalVersion
