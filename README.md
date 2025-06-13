@@ -1,8 +1,6 @@
 ## Utils Based on SpinalHDL
 
-<a href="https://central.sonatype.com/artifact/io.github.xueweiwujxw/spinalutils_2.12">
-<img src="https://img.shields.io/maven-central/v/io.github.xueweiwujxw/spinalutils_2.12.svg" alt="SpinalUtils Maven">
-</a>
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.xueweiwujxw/spinalutils_2.12.svg?label=Maven%20Central&logo=scala)](https://central.sonatype.com/artifact/io.github.xueweiwujxw/spinalutils_2.12)
 
 This repository uses SpinalHDL to implement some FPGA algorithms, building scripts for some Xilinx IP cores and primitive descriptions which can be easily used througn `BlackBox`.
 
