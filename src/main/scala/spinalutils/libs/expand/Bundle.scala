@@ -38,22 +38,3 @@ trait IPadSingleDir[T <: IPadSingleDir[T]] extends Bundle with IMasterSlave with
   def busAlignedBytes(busDataWidth: Int): Int =
     scala.math.ceil(this.bits.toDouble / busDataWidth.toDouble).toInt * (busDataWidth / 8)
 }
-
-object IPadSingleDirDataTest extends App {
-  case class IPadSingleDirData(pad: Boolean = false) extends IPadSingleDir[IPadSingleDirData] {
-    val data = Bits(32 bits)
-    val __pad_0__ = pad generate B(0, 1 bits)
-  }
-  case class IPadSingleDirComponent() extends Component {
-    val io = new Bundle {
-      val input = slave(IPadSingleDirData())
-      val output = master(IPadSingleDirData())
-    }
-
-    val reg = RegInit(IPadSingleDirData(true).getZero)
-    io.input >> reg
-    io.output << reg
-  }
-
-  SpinalConfig().generateVerilog(IPadSingleDirComponent())
-}
