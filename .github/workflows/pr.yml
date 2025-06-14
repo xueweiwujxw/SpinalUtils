@@ -81,12 +81,14 @@ jobs:
 
             md5sum "$file" | awk '{print $1}' > "${file}.md5"
             sha1sum "$file" | awk '{print $1}' > "${file}.sha1"
-            sha256sum "$file" | awk '{print $1}' > "${file}.sha256"
           done
 
           ZIP_NAME="${PROJECT_NAME}_${SCALA_VERSION}-${PROJECT_VERSION}-dist.zip"
           ZIP_PREFIX="${PROJECT_NAME}_${SCALA_VERSION}-${PROJECT_VERSION}"
-          zip $ZIP_NAME $ZIP_PREFIX*
+          TAR_PATH="io/github/xueweiwujxw/${PROJECT_NAME}_${SCALA_VERSION}/${PROJECT_VERSION}"
+          mkdir -p $TAR_PATH
+          cp $ZIP_PREFIX* $TAR_PATH
+          zip -r $ZIP_NAME $TAR_PATH
 
           cd ../../
 
