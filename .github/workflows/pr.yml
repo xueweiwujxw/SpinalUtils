@@ -1,4 +1,4 @@
-name: Publish Maven Central
+name: Pull Request Check
 
 on:
   pull_request:
@@ -66,6 +66,7 @@ jobs:
 
       - name: Build project
         run: |
+          sbt clean compile package packageSrc packageDoc makePom
 
       - name: Package and Sign artifacts
         id: package_and_sign
