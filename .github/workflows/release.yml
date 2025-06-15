@@ -1,0 +1,118 @@
+name: Publish Maven Central
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  SCALA_VERSION: '2.12'
+  PROJECT_NAME: 'spinalutils'
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout/@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install sbt
+        run: |
+          # Install sbt
+          SBT_VERSION=1.9.7
+          curl -fLO "https://github.com/sbt/sbt/releases/download/v$SBT_VERSION/sbt-$SBT_VERSION.tgz"
+          sudo tar -xzf "sbt-$SBT_VERSION.tgz" -C /usr/share
+          sudo ln -s /usr/share/sbt/bin/sbt /usr/bin/sbt
+
+          # Verify Installation
+          sbt sbtVersion
+
+      - name: Extract Project Version
+        id: get_version
+        run: |
+          # get project version
+          VERSION=$(awk -F'"' '/ThisBuild \/ version :=/ {print $2}' build.sbt)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Failed to extract version from build.sbt"
+            echo "Looking for pattern: ThisBuild / version := \"...\""
+            exit 1
+          fi
+
+          echo "Extracted version from build.sbt: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Import GPG Key
+        id: import_gpg
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+          echo "use-agent" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          echo "default-cache-ttl 86400" >> ~/.gnupg/gpg-agent.conf
+          echo "max-cache-ttl 604800" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+          gpgconf --reload gpg-agent
+
+          echo "$GPG_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --sign ~/.gnupg/gpg-agent.conf
+          rm ~/.gnupg/gpg-agent.conf.gpg
+
+      - name: Build project
+        run: |
+          sbt clean compile package packageSrc packageDoc makePom
+
+      - name: Package and Sign artifacts
+        id: package_and_sign
+        env:
+          PROJECT_VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          TARGET_DIR="target/scala-$SCALA_VERSION"
+          cd $TARGET_DIR
+
+          for file in *.jar *.pom; do
+            echo "${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --detach-sign --armor "$file"
+
+            md5sum "$file" | awk '{print $1}' > "${file}.md5"
+            sha1sum "$file" | awk '{print $1}' > "${file}.sha1"
+          done
+
+          ZIP_NAME="${PROJECT_NAME}_${SCALA_VERSION}-${PROJECT_VERSION}-dist.zip"
+          ZIP_PREFIX="${PROJECT_NAME}_${SCALA_VERSION}-${PROJECT_VERSION}"
+          TAR_PATH="io/github/xueweiwujxw/${PROJECT_NAME}_${SCALA_VERSION}/${PROJECT_VERSION}"
+          mkdir -p $TAR_PATH
+          cp $ZIP_PREFIX* $TAR_PATH
+          zip -r $ZIP_NAME $TAR_PATH
+
+          cd ../../
+
+          AUTH_HEADER="Bearer $(printf "${{ secrets.SONATYPEUSERNAME }}:${{ secrets.SONATYPEPASSWORD }}" | base64)"
+          set +x
+
+          CURL_LOG=$(mktemp)
+
+          curl --request POST \
+          --verbose \
+          --header "Authorization: $AUTH_HEADER" \
+          --form bundle=target/scala-${{ env.SCALA_VERSION }}/${{ env.PROJECT_NAME }}_${{ env.SCALA_VERSION }}-${{ steps.get_version.outputs.version }}-dist.zip \
+          https://central.sonatype.com/api/v1/publisher/upload &> "$CURL_LOG"
+
+          grep -vi 'Authorization:' "$CURL_LOG"
+          rm "$CURL_LOG"
+
+          set -x
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: |
+            target/scala-${{ env.SCALA_VERSION }}/${{ env.PROJECT_NAME }}_${{ env.SCALA_VERSION }}-${{ steps.get_version.outputs.version }}-dist.zip
+            retention-days: 1
