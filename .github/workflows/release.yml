@@ -98,11 +98,12 @@ jobs:
 
           CURL_LOG=$(mktemp)
 
-          curl --request POST \
-          --verbose \
-          --header "Authorization: $AUTH_HEADER" \
-          --form bundle=target/scala-${{ env.SCALA_VERSION }}/${{ env.PROJECT_NAME }}_${{ env.SCALA_VERSION }}-${{ steps.get_version.outputs.version }}-dist.zip \
-          https://central.sonatype.com/api/v1/publisher/upload &> "$CURL_LOG"
+          curl -X 'POST' \
+          "https://central.sonatype.com/api/v1/publisher/upload?name=${{ env.PROJECT_NAME }}_${{ env.SCALA_VERSION }}-${{ steps.get_version.outputs.version }}&publishingType=AUTOMATIC" \
+          -H 'accept: text/plain' \
+          -H "Authorization: $AUTH_HEADER" \
+          -H 'Content-Type: multipart/form-data' \
+          -F 'bundle=@target/scala-${{ env.SCALA_VERSION }}/${{ env.PROJECT_NAME }}_${{ env.SCALA_VERSION }}-${{ steps.get_version.outputs.version }}-dist.zip;type=application/x-zip-compressed' &> "$CURL_LOG"
 
           grep -vi 'Authorization:' "$CURL_LOG"
           rm "$CURL_LOG"
