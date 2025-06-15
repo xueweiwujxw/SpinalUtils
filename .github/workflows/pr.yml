@@ -94,3 +94,11 @@ jobs:
 
           echo "artifact_path=$TARGET_DIR/$ZIP_NAME" >> $GITHUB_OUTPUT
           echo "publish_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: |
+            target/scala-${{ env.SCALA_VERSION }}/${{ env.PROJECT_NAME }}_${{ env.SCALA_VERSION }}-${{ steps.get_version.outputs.version }}-dist.zip
+            retention-days: 1
