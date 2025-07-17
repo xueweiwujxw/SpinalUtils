@@ -46,51 +46,6 @@ jobs:
           echo "Extracted version from build.sbt: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Import GPG Key
-        id: import_gpg
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}
-        run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-
-          echo "use-agent" >> ~/.gnupg/gpg.conf
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          echo "default-cache-ttl 86400" >> ~/.gnupg/gpg-agent.conf
-          echo "max-cache-ttl 604800" >> ~/.gnupg/gpg-agent.conf
-          gpgconf --kill gpg-agent
-          gpgconf --reload gpg-agent
-
-          echo "$GPG_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --sign ~/.gnupg/gpg-agent.conf
-          rm ~/.gnupg/gpg-agent.conf.gpg
-
       - name: Build project
         run: |
           sbt clean compile package packageSrc packageDoc makePom
-
-      - name: Package and Sign artifacts
-        id: package_and_sign
-        env:
-          PROJECT_VERSION: ${{ steps.get_version.outputs.version }}
-        run: |
-          TARGET_DIR="target/scala-$SCALA_VERSION"
-          cd $TARGET_DIR
-
-          for file in *.jar *.pom; do
-            echo "${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --detach-sign --armor "$file"
-
-            md5sum "$file" | awk '{print $1}' > "${file}.md5"
-            sha1sum "$file" | awk '{print $1}' > "${file}.sha1"
-          done
-
-          ZIP_NAME="${PROJECT_NAME}_${SCALA_VERSION}-${PROJECT_VERSION}-dist.zip"
-          ZIP_PREFIX="${PROJECT_NAME}_${SCALA_VERSION}-${PROJECT_VERSION}"
-          TAR_PATH="io/github/xueweiwujxw/${PROJECT_NAME}_${SCALA_VERSION}/${PROJECT_VERSION}"
-          mkdir -p $TAR_PATH
-          cp $ZIP_PREFIX* $TAR_PATH
-          zip -r $ZIP_NAME $TAR_PATH
-
-          cd ../../
-
-          echo "artifact_path=$TARGET_DIR/$ZIP_NAME" >> $GITHUB_OUTPUT
-          echo "publish_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
