@@ -169,7 +169,7 @@ protected case class QPLLPort(incore: Boolean = false, locs: List[LaneLoc]) exte
   var parts: Set[Int] = Set()
   locs.foreach(f => {
     if (f.setValue != "X") {
-      parts += f.postion / 4 + 1
+      parts += scala.math.ceil(f.postion.toDouble / 4).toInt
     }
   })
 
