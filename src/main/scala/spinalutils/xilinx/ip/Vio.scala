@@ -53,26 +53,26 @@ if { $$vioExit <0} {
 }"""
     tcls = tcls :+ createCmd
 
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
     if (conf.inProbes.length != 0)
-      properties = properties :+ f"CONFIG.C_EN_PROBE_IN_ACTIVITY {${conf.inProbeActiveDetector.toInt}}"
+      properties = properties :+ f"  CONFIG.C_EN_PROBE_IN_ACTIVITY {${conf.inProbeActiveDetector.toInt}}"
 
-    properties = properties :+ f"CONFIG.C_NUM_PROBE_IN {${conf.inProbes.length}}"
+    properties = properties :+ f"  CONFIG.C_NUM_PROBE_IN {${conf.inProbes.length}}"
     conf.inProbes.zipWithIndex.map { case (w, i) =>
-      properties = properties :+ f"CONFIG.C_PROBE_IN${i}_WIDTH {${w}}"
+      properties = properties :+ f"  CONFIG.C_PROBE_IN${i}_WIDTH {${w}}"
     }
 
-    properties = properties :+ f"CONFIG.C_NUM_PROBE_OUT {${conf.outProbes.length}}"
+    properties = properties :+ f"  CONFIG.C_NUM_PROBE_OUT {${conf.outProbes.length}}"
     conf.outProbes.zip(conf.outInits).zipWithIndex.map { case ((w, init), i) =>
-      properties = properties :+ f"CONFIG.C_PROBE_OUT${i}_WIDTH {${w}}"
-      properties = properties :+ f"CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${init}%x}"
+      properties = properties :+ f"  CONFIG.C_PROBE_OUT${i}_WIDTH {${w}}"
+      properties = properties :+ f"  CONFIG.C_PROBE_OUT${i}_INIT_VAL {0x${init}%x}"
     }
 
     properties.foreach { x =>
       if (x != "")
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
     }
     property = property.concat(f"] [get_ips vio_${conf.name}]")
 

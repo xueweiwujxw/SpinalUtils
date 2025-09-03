@@ -164,34 +164,34 @@ if { $$xadcWizExist <0} {
 }"""
     tcls = tcls :+ createCmd
 
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
-    properties = properties :+ f"CONFIG.INTERFACE_SELECTION {${conf.interface.getName()}}"
-    properties = properties :+ f"CONFIG.TIMING_MODE {${conf.timing.getName()}}"
-    properties = properties :+ f"CONFIG.DCLK_FREQUENCY {${conf.drpFreq}}"
-    properties = properties :+ f"CONFIG.ENABLE_RESET {${conf.interface != XadcInterfaceOptions.AXI4Lite}}"
-    properties = properties :+ f"CONFIG.ENABLE_AXI4STREAM {${conf.streamEn}}"
-    properties = properties :+ f"CONFIG.FIFO_DEPTH {${conf.streamFIFODepth}}"
-    properties = properties :+ f"CONFIG.OT_ALARM {${conf.alarms.useOverTemperature}}"
-    properties = properties :+ f"CONFIG.TEMPERATURE_ALARM_OT_TRIGGER {${conf.alarms.OverTemperatureTrigger}}"
-    properties = properties :+ f"CONFIG.TEMPERATURE_ALARM_OT_RESET {${conf.alarms.OverTemperatureReset}}"
-    properties = properties :+ f"CONFIG.USER_TEMP_ALARM {${conf.alarms.useUserTemperature}}"
-    properties = properties :+ f"CONFIG.TEMPERATURE_ALARM_TRIGGER {${conf.alarms.OverTemperatureTrigger}}"
-    properties = properties :+ f"CONFIG.TEMPERATURE_ALARM_RESET {${conf.alarms.OverTemperatureReset}}"
-    properties = properties :+ f"CONFIG.VCCINT_ALARM {${conf.alarms.useVCCINT}}"
-    properties = properties :+ f"CONFIG.VCCINT_ALARM_LOWER {${conf.alarms.VCCINTLower}}"
-    properties = properties :+ f"CONFIG.VCCINT_ALARM_UPPER {${conf.alarms.VCCINTUpper}}"
-    properties = properties :+ f"CONFIG.VCCAUX_ALARM {${conf.alarms.useVCCAUX}}"
-    properties = properties :+ f"CONFIG.VCCAUX_ALARM_LOWER {${conf.alarms.VCCAUXLower}}"
-    properties = properties :+ f"CONFIG.VCCAUX_ALARM_UPPER {${conf.alarms.VCCAUXUpper}}"
-    properties = properties :+ f"CONFIG.ENABLE_VBRAM_ALARM {${conf.alarms.useVCCBRAM}}"
-    properties = properties :+ f"CONFIG.VBRAM_ALARM_LOWER {${conf.alarms.VCCBRAMLower}}"
-    properties = properties :+ f"CONFIG.VBRAM_ALARM_UPPER {${conf.alarms.VCCBRAMUpper}}"
+    properties = properties :+ f"  CONFIG.INTERFACE_SELECTION {${conf.interface.getName()}}"
+    properties = properties :+ f"  CONFIG.TIMING_MODE {${conf.timing.getName()}}"
+    properties = properties :+ f"  CONFIG.DCLK_FREQUENCY {${conf.drpFreq}}"
+    properties = properties :+ f"  CONFIG.ENABLE_RESET {${conf.interface != XadcInterfaceOptions.AXI4Lite}}"
+    properties = properties :+ f"  CONFIG.ENABLE_AXI4STREAM {${conf.streamEn}}"
+    properties = properties :+ f"  CONFIG.FIFO_DEPTH {${conf.streamFIFODepth}}"
+    properties = properties :+ f"  CONFIG.OT_ALARM {${conf.alarms.useOverTemperature}}"
+    properties = properties :+ f"  CONFIG.TEMPERATURE_ALARM_OT_TRIGGER {${conf.alarms.OverTemperatureTrigger}}"
+    properties = properties :+ f"  CONFIG.TEMPERATURE_ALARM_OT_RESET {${conf.alarms.OverTemperatureReset}}"
+    properties = properties :+ f"  CONFIG.USER_TEMP_ALARM {${conf.alarms.useUserTemperature}}"
+    properties = properties :+ f"  CONFIG.TEMPERATURE_ALARM_TRIGGER {${conf.alarms.OverTemperatureTrigger}}"
+    properties = properties :+ f"  CONFIG.TEMPERATURE_ALARM_RESET {${conf.alarms.OverTemperatureReset}}"
+    properties = properties :+ f"  CONFIG.VCCINT_ALARM {${conf.alarms.useVCCINT}}"
+    properties = properties :+ f"  CONFIG.VCCINT_ALARM_LOWER {${conf.alarms.VCCINTLower}}"
+    properties = properties :+ f"  CONFIG.VCCINT_ALARM_UPPER {${conf.alarms.VCCINTUpper}}"
+    properties = properties :+ f"  CONFIG.VCCAUX_ALARM {${conf.alarms.useVCCAUX}}"
+    properties = properties :+ f"  CONFIG.VCCAUX_ALARM_LOWER {${conf.alarms.VCCAUXLower}}"
+    properties = properties :+ f"  CONFIG.VCCAUX_ALARM_UPPER {${conf.alarms.VCCAUXUpper}}"
+    properties = properties :+ f"  CONFIG.ENABLE_VBRAM_ALARM {${conf.alarms.useVCCBRAM}}"
+    properties = properties :+ f"  CONFIG.VBRAM_ALARM_LOWER {${conf.alarms.VCCBRAMLower}}"
+    properties = properties :+ f"  CONFIG.VBRAM_ALARM_UPPER {${conf.alarms.VCCBRAMUpper}}"
 
     properties.foreach { x =>
       if (x != "")
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
     }
     property = property.concat(f"] [get_ips xadc_wiz_${conf.name}]")
 
