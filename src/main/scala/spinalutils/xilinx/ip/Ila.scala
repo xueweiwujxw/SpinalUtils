@@ -109,7 +109,7 @@ object Ila {
       IlaConfig(
         name = name,
         probes = signalWidths,
-        depth = 1024
+        depth = depth
       )
     )
     ila.setName(f"${name}_ila")
@@ -127,7 +127,7 @@ object Ila {
       IlaConfig(
         name = name,
         probes = signalWidths,
-        depth = 1024
+        depth = depth
       )
     )
     ila.setName(f"${name}_ila")
