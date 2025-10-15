@@ -363,7 +363,7 @@ case class Aurora8b10b(config: Aurora8b10bConfig) extends BlackBox with IXilinxI
 
   def generateTcl(): List[String] = {
     var tcls: List[String] = List()
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
     val createCmd =
       f"""set aurora8b10bExist [lsearch -exact [get_ips aurora_8b10b_*] aurora_8b10b_${config.name}]
@@ -372,39 +372,39 @@ if { $$aurora8b10bExist <0} {
 }"""
     tcls = tcls :+ createCmd
 
-    properties = properties :+ f"CONFIG.C_LANE_WIDTH {${config.laneWidth}}"
-    properties = properties :+ f"CONFIG.C_LINE_RATE {${config.lineRate}}"
-    properties = properties :+ f"CONFIG.C_REFCLK_FREQUENCY {${config.gtRefClk}}"
-    properties = properties :+ f"CONFIG.C_INIT_CLK {${config.initClk}}"
-    properties = properties :+ f"CONFIG.DRP_FREQ {${config.drpClk}}"
-    properties = properties :+ f"CONFIG.Dataflow_Config {${config.dataFlow}}"
-    properties = properties :+ f"CONFIG.Interface_Mode {${config.interface}}"
-    properties = properties :+ f"CONFIG.Flow_Mode {${config.flowCtrl}}"
-    properties = properties :+ f"CONFIG.SupportLevel {${config.incore.toInt}}"
+    properties = properties :+ f"  CONFIG.C_LANE_WIDTH {${config.laneWidth}}"
+    properties = properties :+ f"  CONFIG.C_LINE_RATE {${config.lineRate}}"
+    properties = properties :+ f"  CONFIG.C_REFCLK_FREQUENCY {${config.gtRefClk}}"
+    properties = properties :+ f"  CONFIG.C_INIT_CLK {${config.initClk}}"
+    properties = properties :+ f"  CONFIG.DRP_FREQ {${config.drpClk}}"
+    properties = properties :+ f"  CONFIG.Dataflow_Config {${config.dataFlow}}"
+    properties = properties :+ f"  CONFIG.Interface_Mode {${config.interface}}"
+    properties = properties :+ f"  CONFIG.Flow_Mode {${config.flowCtrl}}"
+    properties = properties :+ f"  CONFIG.SupportLevel {${config.incore.toInt}}"
     if (config.incore) {
-      properties = properties :+ f"CONFIG.SINGLEEND_INITCLK {${config.initClkSingleEnd}}"
-      properties = properties :+ f"CONFIG.SINGLEEND_GTREFCLK {${config.gtRefClkSingleEnd}}"
+      properties = properties :+ f"  CONFIG.SINGLEEND_INITCLK {${config.initClkSingleEnd}}"
+      properties = properties :+ f"  CONFIG.SINGLEEND_GTREFCLK {${config.gtRefClkSingleEnd}}"
     }
-    properties = properties :+ f"CONFIG.C_USE_SCRAMBLER {${config.scramber}}"
-    properties = properties :+ f"CONFIG.C_USE_CRC {${config.crc}}"
-    properties = properties :+ f"CONFIG.C_USE_BYTESWAP {${config.littleEndian}}"
+    properties = properties :+ f"  CONFIG.C_USE_SCRAMBLER {${config.scramber}}"
+    properties = properties :+ f"  CONFIG.C_USE_CRC {${config.crc}}"
+    properties = properties :+ f"  CONFIG.C_USE_BYTESWAP {${config.littleEndian}}"
     if (config.column != null)
-      properties = properties :+ f"CONFIG.C_COLUMN_USED {${config.column}}"
-    properties = properties :+ f"CONFIG.C_AURORA_LANES {${config.lanes}}"
+      properties = properties :+ f"  CONFIG.C_COLUMN_USED {${config.column}}"
+    properties = properties :+ f"  CONFIG.C_AURORA_LANES {${config.lanes}}"
 
     for (i <- 0 until config.gtClock.length)
-      properties = properties :+ f"CONFIG.C_GT_CLOCK_${i + 1} {${config.gtClock(i)}}"
+      properties = properties :+ f"  CONFIG.C_GT_CLOCK_${i + 1} {${config.gtClock(i)}}"
 
     var locSet = (1 to config.maxLoc).toSet
     for (i <- 0 until config.laneLoc.length) {
-      properties = properties :+ f"CONFIG.C_GT_LOC_${config.laneLoc(i).postion} {${config.laneLoc(i).setValue}}"
+      properties = properties :+ f"  CONFIG.C_GT_LOC_${config.laneLoc(i).postion} {${config.laneLoc(i).setValue}}"
       locSet -= config.laneLoc(i).postion
     }
-    locSet.foreach(f => properties = properties :+ f"CONFIG.C_GT_LOC_${f} {X}")
+    locSet.foreach(f => properties = properties :+ f"  CONFIG.C_GT_LOC_${f} {X}")
 
     properties.foreach { x =>
       if (x != "")
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
     }
     property = property.concat(f"] [get_ips aurora_8b10b_${config.name}]")
 

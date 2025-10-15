@@ -118,24 +118,24 @@ if { $$axiDwidthConvExist <0} {
 
     tcls = tcls :+ createCmd
 
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
-    properties = properties :+ f"CONFIG.PROTOCOL {${conf.protocol}}"
-    properties = properties :+ f"CONFIG.READ_WRITE_MODE {${conf.rwmode}}"
-    properties = properties :+ f"CONFIG.ADDR_WIDTH {${conf.addressWidth}}"
-    properties = properties :+ f"CONFIG.SI_DATA_WIDTH {${conf.siDataWidth}}"
-    properties = properties :+ f"CONFIG.MI_DATA_WIDTH {${conf.miDataWidth}}"
-    properties = properties :+ f"CONFIG.SI_ID_WIDTH {${conf.siIdWidth}}"
-    properties = properties :+ f"CONFIG.MAX_SPLIT_BEATS {${conf.maxBurstLenth}}"
-    properties = properties :+ f"CONFIG.FIFO_MODE {${conf.fifoMode.position}}"
-    properties = properties :+ f"CONFIG.SYNCHRONIZATION_STAGES {${conf.syncStages}}"
+    properties = properties :+ f"  CONFIG.PROTOCOL {${conf.protocol}}"
+    properties = properties :+ f"  CONFIG.READ_WRITE_MODE {${conf.rwmode}}"
+    properties = properties :+ f"  CONFIG.ADDR_WIDTH {${conf.addressWidth}}"
+    properties = properties :+ f"  CONFIG.SI_DATA_WIDTH {${conf.siDataWidth}}"
+    properties = properties :+ f"  CONFIG.MI_DATA_WIDTH {${conf.miDataWidth}}"
+    properties = properties :+ f"  CONFIG.SI_ID_WIDTH {${conf.siIdWidth}}"
+    properties = properties :+ f"  CONFIG.MAX_SPLIT_BEATS {${conf.maxBurstLenth}}"
+    properties = properties :+ f"  CONFIG.FIFO_MODE {${conf.fifoMode.position}}"
+    properties = properties :+ f"  CONFIG.SYNCHRONIZATION_STAGES {${conf.syncStages}}"
     properties =
-      properties :+ f"CONFIG.ACLK_ASYNC {${if (conf.fifoMode == AxiDataWidthAdapterFifoMode.PacketFifoWithCC) 1 else 0}}"
+      properties :+ f"  CONFIG.ACLK_ASYNC {${if (conf.fifoMode == AxiDataWidthAdapterFifoMode.PacketFifoWithCC) 1 else 0}}"
 
     properties.foreach { x =>
       if (x != "")
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
     }
     property = property.concat(f"] [get_ips axi_dwidth_converter_${conf.name}]")
 

@@ -52,36 +52,36 @@ if { $$ilaExit <0 } {
 }"""
     tcls = tcls :+ createCmd
 
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
-    properties = properties :+ f"CONFIG.C_DATA_DEPTH {${conf.depth}}"
+    properties = properties :+ f"  CONFIG.C_DATA_DEPTH {${conf.depth}}"
+    properties = properties :+ f"  CONFIG.C_NUM_OF_PROBES {${conf.probes.length}}"
     conf.probes.zipWithIndex.map { case (w, i) =>
-      properties = properties :+ f"CONFIG.C_PROBE${i}_WIDTH {${w}}"
+      properties = properties :+ f"  CONFIG.C_PROBE${i}_WIDTH {${w}}"
     }
-    properties = properties :+ f"CONFIG.C_NUM_OF_PROBES {${conf.probes.length}}"
 
-    properties = properties :+ f"CONFIG.ALL_PROBE_SAME_MU {${conf.sameComparators}}"
+    properties = properties :+ f"  CONFIG.ALL_PROBE_SAME_MU {${conf.sameComparators}}"
     if (conf.sameComparators) {
-      properties = properties :+ f"CONFIG.ALL_PROBE_SAME_MU_CNT {${conf.comparator}}"
+      properties = properties :+ f"  CONFIG.ALL_PROBE_SAME_MU_CNT {${conf.comparator}}"
     } else {
       conf.comparators.zipWithIndex.map { case (c, i) =>
-        properties = properties :+ f"CONFIG.C_PROBE${i}_MU_CNT {${c}}"
+        properties = properties :+ f"  CONFIG.C_PROBE${i}_MU_CNT {${c}}"
       }
     }
 
     if (conf.triggerOptions != null) {
       conf.triggerOptions.zipWithIndex.map { case (t, i) =>
-        properties = properties :+ f"CONFIG.C_PROBE${i}_TYPE {${t.position}}"
+        properties = properties :+ f"  CONFIG.C_PROBE${i}_TYPE {${t.position}}"
       }
     }
 
-    properties = properties :+ f"CONFIG.C_ADV_TRIGGER {${conf.advancedTrigger}}"
-    properties = properties :+ f"CONFIG.C_EN_STRG_QUAL {${conf.captureControl.toInt}}"
+    properties = properties :+ f"  CONFIG.C_ADV_TRIGGER {${conf.advancedTrigger}}"
+    properties = properties :+ f"  CONFIG.C_EN_STRG_QUAL {${conf.captureControl.toInt}}"
 
     properties.foreach { x =>
       if (x != "")
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
     }
     property = property.concat(f"] [get_ips ila_${conf.name}]")
 
@@ -109,7 +109,7 @@ object Ila {
       IlaConfig(
         name = name,
         probes = signalWidths,
-        depth = 1024
+        depth = depth
       )
     )
     ila.setName(f"${name}_ila")
@@ -127,7 +127,7 @@ object Ila {
       IlaConfig(
         name = name,
         probes = signalWidths,
-        depth = 1024
+        depth = depth
       )
     )
     ila.setName(f"${name}_ila")

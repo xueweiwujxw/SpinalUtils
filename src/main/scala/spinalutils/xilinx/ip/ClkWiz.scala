@@ -86,40 +86,41 @@ if { $$clkWizExit <0} {
 }"""
     tcls = tcls :+ createCmd
 
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
-    properties = properties :+ f"CONFIG.PRIMITIVE {${conf.primitive.getName()}}"
-    properties = properties :+ f"CONFIG.PRIM_IN_FREQ {${conf.freqIn}}"
-    properties = properties :+ f"CONFIG.PRIM_SOURCE {${if (conf.dualIn) "Differential_clock_capable_pin"
+    properties = properties :+ f"  CONFIG.PRIMITIVE {${conf.primitive.getName()}}"
+    properties = properties :+ f"  CONFIG.PRIM_IN_FREQ {${conf.freqIn}}"
+    properties = properties :+ f"  CONFIG.PRIM_SOURCE {${if (conf.dualIn) "Differential_clock_capable_pin"
       else "Single_ended_clock_capable_pin"}}"
     if (conf.freqOut.length == 1)
-      properties = properties :+ f"CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {${conf.freqOut(0)}}"
+      properties = properties :+ f"  CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {${conf.freqOut(0)}}"
     else
       conf.freqOut.zipWithIndex.map { case (f, i) =>
-        properties = properties :+ f"CONFIG.CLKOUT${i + 1}_USED {true} CONFIG.CLKOUT${i + 1}_REQUESTED_OUT_FREQ ${f}"
+        properties = properties :+ f"  CONFIG.CLKOUT${i + 1}_USED {true}"
+        properties = properties :+ f"  CONFIG.CLKOUT${i + 1}_REQUESTED_OUT_FREQ ${f}"
       }
     if (conf.freqDrives != null)
       conf.freqDrives.zipWithIndex.map { case (d, i) =>
-        properties = properties :+ f"CONFIG.CLKOUT${i + 1}_DRIVES {${d.getName()}}"
+        properties = properties :+ f"  CONFIG.CLKOUT${i + 1}_DRIVES {${d.getName()}}"
       }
-    properties = properties :+ f"CONFIG.JITTER_OPTIONS {${conf.jitterOpt.getName()}}"
+    properties = properties :+ f"  CONFIG.JITTER_OPTIONS {${conf.jitterOpt.getName()}}"
     if (conf.jitterOpt == ClkWizJitterOptions.UI)
-      properties = properties :+ f"CONFIG.CLKIN1_UI_JITTER {${conf.inputJitter}}"
+      properties = properties :+ f"  CONFIG.CLKIN1_UI_JITTER {${conf.inputJitter}}"
     else
-      properties = properties :+ f"CONFIG.CLKIN1_JITTER_PS {${conf.jitterPs}}"
+      properties = properties :+ f"  CONFIG.CLKIN1_JITTER_PS {${conf.jitterPs}}"
     for (i <- conf.freqOut.length + 1 to 7)
-      properties = properties :+ f"CONFIG.CLKOUT${i}_USED {false}"
-    properties = properties :+ f"CONFIG.USE_LOCKED {${conf.locked}}"
-    properties = properties :+ f"CONFIG.USE_RESET {${conf.reset}}"
+      properties = properties :+ f"  CONFIG.CLKOUT${i}_USED {false}"
+    properties = properties :+ f"  CONFIG.USE_LOCKED {${conf.locked}}"
+    properties = properties :+ f"  CONFIG.USE_RESET {${conf.reset}}"
     if (conf.reset) {
-      properties = properties :+ f"CONFIG.RESET_PORT {${if (conf.resetType == ClkWizResetOptions.LOW) "resetn"
+      properties = properties :+ f"  CONFIG.RESET_PORT {${if (conf.resetType == ClkWizResetOptions.LOW) "resetn"
         else "reset"}}"
     }
 
     properties.foreach { x =>
       if (x != "")
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
     }
     property = property.concat(f"] [get_ips clk_wiz_${conf.name}]")
 

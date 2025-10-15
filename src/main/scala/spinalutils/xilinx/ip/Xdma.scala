@@ -168,7 +168,7 @@ case class Xdmavx690(config: XdmaConfig = XdmaConfig()) extends XdmaBase with IX
 
   override def generateTcl(): List[String] = {
     var tcls: List[String] = List()
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
     val createCmd = f"""set xdmaExist [lsearch -exact [get_ips xdma_*] xdma_${config.name}]
@@ -177,46 +177,46 @@ if { $$xdmaExist <0} {
 }"""
     tcls = tcls :+ createCmd
 
-    properties = properties :+ f"CONFIG.mode_selection {${if (config.advancedMode) "Advanced"
+    properties = properties :+ f"  CONFIG.mode_selection {${if (config.advancedMode) "Advanced"
       else "Basic"}}"
-    properties = properties :+ f"${if (config.location != "") f"CONFIG.pcie_blk_locn {${config.location}}"
+    properties = properties :+ f"${if (config.location != "") f"  CONFIG.pcie_blk_locn {${config.location}}"
       else ""}"
-    properties = properties :+ f"CONFIG.pl_link_cap_max_link_width {X${config.lanes}}"
-    properties = properties :+ f"CONFIG.pl_link_cap_max_link_speed {${config.speed}%.1f_GT/s}"
-    properties = properties :+ f"CONFIG.ref_clk_freq {${config.refclock}_MHz}"
-    properties = properties :+ f"CONFIG.axi_data_width {${config.dataWidth}_bit}"
-    properties = properties :+ f"CONFIG.axisten_freq {${config.dataClock}}"
-    properties = properties :+ f"CONFIG.axist_bypass_en {${config.bypass}}"
-    properties = properties :+ f"CONFIG.axist_bypass_size {${config.bypassSize}}"
-    properties = properties :+ f"CONFIG.axist_bypass_scale {${config.bypassScale}}"
-    properties = properties :+ f"CONFIG.pf0_interrupt_pin {${config.interruptType}}"
-    properties = properties :+ f"CONFIG.xdma_num_usr_irq {${config.userIrq}}"
-    properties = properties :+ f"CONFIG.xdma_rnum_chnl {${config.h2cStreams}}"
-    properties = properties :+ f"CONFIG.xdma_wnum_chnl {${config.c2hStreams}}"
-    properties = properties :+ f"CONFIG.xdma_rnum_rids {${config.readChannelIds}}"
-    properties = properties :+ f"CONFIG.xdma_wnum_rids {${config.writeChannelIds}}"
-    // properties = properties :+ f"CONFIG.select_quad {GTY_Quad_233}" // has been disabled
-    // properties = properties :+ f"CONFIG.plltype {QPLL1}" // has been disabled
-    properties = properties :+ f"CONFIG.xdma_axi_intf_mm {AXI_Stream}"
-    properties = properties :+ f"CONFIG.pf0_msix_enabled {true}"
-    properties = properties :+ f"CONFIG.pf0_msix_cap_table_size {01F}"
-    properties = properties :+ f"CONFIG.pf0_msix_cap_table_offset {00008000}"
-    properties = properties :+ f"CONFIG.pf0_msix_cap_pba_offset {00008FE0}"
-    properties = properties :+ f"CONFIG.cfg_mgmt_if {false}"
-    properties = properties :+ f"CONFIG.axi_bypass_64bit_en {true}"
-    properties = properties :+ f"CONFIG.axi_bypass_prefetchable {true}"
-    properties = properties :+ f"CONFIG.pf0_device_id {9028}"
-    properties = properties :+ f"CONFIG.PF0_DEVICE_ID_mqdma {9028}"
-    properties = properties :+ f"CONFIG.PF2_DEVICE_ID_mqdma {9228}"
-    properties = properties :+ f"CONFIG.PF3_DEVICE_ID_mqdma {9328}"
-    properties = properties :+ f"CONFIG.PF0_SRIOV_VF_DEVICE_ID {A038}"
-    properties = properties :+ f"CONFIG.PF1_SRIOV_VF_DEVICE_ID {A138}"
-    properties = properties :+ f"CONFIG.PF2_SRIOV_VF_DEVICE_ID {A238}"
-    properties = properties :+ f"CONFIG.PF3_SRIOV_VF_DEVICE_ID {A338}"
+    properties = properties :+ f"  CONFIG.pl_link_cap_max_link_width {X${config.lanes}}"
+    properties = properties :+ f"  CONFIG.pl_link_cap_max_link_speed {${config.speed}%.1f_GT/s}"
+    properties = properties :+ f"  CONFIG.ref_clk_freq {${config.refclock}_MHz}"
+    properties = properties :+ f"  CONFIG.axi_data_width {${config.dataWidth}_bit}"
+    properties = properties :+ f"  CONFIG.axisten_freq {${config.dataClock}}"
+    properties = properties :+ f"  CONFIG.axist_bypass_en {${config.bypass}}"
+    properties = properties :+ f"  CONFIG.axist_bypass_size {${config.bypassSize}}"
+    properties = properties :+ f"  CONFIG.axist_bypass_scale {${config.bypassScale}}"
+    properties = properties :+ f"  CONFIG.pf0_interrupt_pin {${config.interruptType}}"
+    properties = properties :+ f"  CONFIG.xdma_num_usr_irq {${config.userIrq}}"
+    properties = properties :+ f"  CONFIG.xdma_rnum_chnl {${config.h2cStreams}}"
+    properties = properties :+ f"  CONFIG.xdma_wnum_chnl {${config.c2hStreams}}"
+    properties = properties :+ f"  CONFIG.xdma_rnum_rids {${config.readChannelIds}}"
+    properties = properties :+ f"  CONFIG.xdma_wnum_rids {${config.writeChannelIds}}"
+    // properties = properties :+ f"  CONFIG.select_quad {GTY_Quad_233}" // has been disabled
+    // properties = properties :+ f"  CONFIG.plltype {QPLL1}" // has been disabled
+    properties = properties :+ f"  CONFIG.xdma_axi_intf_mm {AXI_Stream}"
+    properties = properties :+ f"  CONFIG.pf0_msix_enabled {true}"
+    properties = properties :+ f"  CONFIG.pf0_msix_cap_table_size {01F}"
+    properties = properties :+ f"  CONFIG.pf0_msix_cap_table_offset {00008000}"
+    properties = properties :+ f"  CONFIG.pf0_msix_cap_pba_offset {00008FE0}"
+    properties = properties :+ f"  CONFIG.cfg_mgmt_if {false}"
+    properties = properties :+ f"  CONFIG.axi_bypass_64bit_en {true}"
+    properties = properties :+ f"  CONFIG.axi_bypass_prefetchable {true}"
+    properties = properties :+ f"  CONFIG.pf0_device_id {9028}"
+    properties = properties :+ f"  CONFIG.PF0_DEVICE_ID_mqdma {9028}"
+    properties = properties :+ f"  CONFIG.PF2_DEVICE_ID_mqdma {9228}"
+    properties = properties :+ f"  CONFIG.PF3_DEVICE_ID_mqdma {9328}"
+    properties = properties :+ f"  CONFIG.PF0_SRIOV_VF_DEVICE_ID {A038}"
+    properties = properties :+ f"  CONFIG.PF1_SRIOV_VF_DEVICE_ID {A138}"
+    properties = properties :+ f"  CONFIG.PF2_SRIOV_VF_DEVICE_ID {A238}"
+    properties = properties :+ f"  CONFIG.PF3_SRIOV_VF_DEVICE_ID {A338}"
 
     properties.foreach { x =>
       if (x != "") {
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
       }
     }
     property = property.concat(f"] [get_ips xdma_${config.name}]\n")
@@ -279,7 +279,7 @@ case class Xdmavu9p(config: XdmaConfig = XdmaConfig()) extends XdmaBase with IXi
 
   override def generateTcl(): List[String] = {
     var tcls: List[String] = List()
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
     val createCmd = f"""set xdmaExist [lsearch -exact [get_ips xdma_*] xdma_${config.name}]
@@ -288,46 +288,46 @@ if { $$xdmaExist <0} {
 }"""
     tcls = tcls :+ createCmd
 
-    properties = properties :+ f"CONFIG.mode_selection {${if (config.advancedMode) "Advanced"
+    properties = properties :+ f"  CONFIG.mode_selection {${if (config.advancedMode) "Advanced"
       else "Basic"}}"
-    properties = properties :+ f"${if (config.location != "") f"CONFIG.pcie_blk_locn {${config.location}}"
+    properties = properties :+ f"${if (config.location != "") f"  CONFIG.pcie_blk_locn {${config.location}}"
       else ""}"
-    properties = properties :+ f"CONFIG.pl_link_cap_max_link_width {X${config.lanes}}"
-    properties = properties :+ f"CONFIG.pl_link_cap_max_link_speed {${config.speed}%.1f_GT/s}"
-    properties = properties :+ f"CONFIG.ref_clk_freq {${config.refclock}_MHz}"
-    properties = properties :+ f"CONFIG.axi_data_width {${config.dataWidth}_bit}"
-    properties = properties :+ f"CONFIG.axisten_freq {${config.dataClock}}"
-    properties = properties :+ f"CONFIG.axist_bypass_en {${config.bypass}}"
-    properties = properties :+ f"CONFIG.axist_bypass_size {${config.bypassSize}}"
-    properties = properties :+ f"CONFIG.axist_bypass_scale {${config.bypassScale}}"
-    properties = properties :+ f"CONFIG.pf0_interrupt_pin {${config.interruptType}}"
-    properties = properties :+ f"CONFIG.xdma_num_usr_irq {${config.userIrq}}"
-    properties = properties :+ f"CONFIG.xdma_rnum_chnl {${config.h2cStreams}}"
-    properties = properties :+ f"CONFIG.xdma_wnum_chnl {${config.c2hStreams}}"
-    properties = properties :+ f"CONFIG.xdma_rnum_rids {${config.readChannelIds}}"
-    properties = properties :+ f"CONFIG.xdma_wnum_rids {${config.writeChannelIds}}"
-    properties = properties :+ f"CONFIG.select_quad {GTY_Quad_233}"
-    // properties = properties :+ f"CONFIG.plltype {QPLL1}"
-    properties = properties :+ f"CONFIG.xdma_axi_intf_mm {AXI_Stream}"
-    properties = properties :+ f"CONFIG.pf0_msix_enabled {true}"
-    properties = properties :+ f"CONFIG.pf0_msix_cap_table_size {01F}"
-    properties = properties :+ f"CONFIG.pf0_msix_cap_table_offset {00008000}"
-    properties = properties :+ f"CONFIG.pf0_msix_cap_pba_offset {00008FE0}"
-    properties = properties :+ f"CONFIG.cfg_mgmt_if {false}"
-    properties = properties :+ f"CONFIG.axi_bypass_64bit_en {true}"
-    properties = properties :+ f"CONFIG.axi_bypass_prefetchable {true}"
-    properties = properties :+ f"CONFIG.pf0_device_id {9028}"
-    properties = properties :+ f"CONFIG.PF0_DEVICE_ID_mqdma {9028}"
-    properties = properties :+ f"CONFIG.PF2_DEVICE_ID_mqdma {9228}"
-    properties = properties :+ f"CONFIG.PF3_DEVICE_ID_mqdma {9328}"
-    properties = properties :+ f"CONFIG.PF0_SRIOV_VF_DEVICE_ID {A038}"
-    properties = properties :+ f"CONFIG.PF1_SRIOV_VF_DEVICE_ID {A138}"
-    properties = properties :+ f"CONFIG.PF2_SRIOV_VF_DEVICE_ID {A238}"
-    properties = properties :+ f"CONFIG.PF3_SRIOV_VF_DEVICE_ID {A338}"
+    properties = properties :+ f"  CONFIG.pl_link_cap_max_link_width {X${config.lanes}}"
+    properties = properties :+ f"  CONFIG.pl_link_cap_max_link_speed {${config.speed}%.1f_GT/s}"
+    properties = properties :+ f"  CONFIG.ref_clk_freq {${config.refclock}_MHz}"
+    properties = properties :+ f"  CONFIG.axi_data_width {${config.dataWidth}_bit}"
+    properties = properties :+ f"  CONFIG.axisten_freq {${config.dataClock}}"
+    properties = properties :+ f"  CONFIG.axist_bypass_en {${config.bypass}}"
+    properties = properties :+ f"  CONFIG.axist_bypass_size {${config.bypassSize}}"
+    properties = properties :+ f"  CONFIG.axist_bypass_scale {${config.bypassScale}}"
+    properties = properties :+ f"  CONFIG.pf0_interrupt_pin {${config.interruptType}}"
+    properties = properties :+ f"  CONFIG.xdma_num_usr_irq {${config.userIrq}}"
+    properties = properties :+ f"  CONFIG.xdma_rnum_chnl {${config.h2cStreams}}"
+    properties = properties :+ f"  CONFIG.xdma_wnum_chnl {${config.c2hStreams}}"
+    properties = properties :+ f"  CONFIG.xdma_rnum_rids {${config.readChannelIds}}"
+    properties = properties :+ f"  CONFIG.xdma_wnum_rids {${config.writeChannelIds}}"
+    properties = properties :+ f"  CONFIG.select_quad {GTY_Quad_233}"
+    // properties = properties :+ f"  CONFIG.plltype {QPLL1}"
+    properties = properties :+ f"  CONFIG.xdma_axi_intf_mm {AXI_Stream}"
+    properties = properties :+ f"  CONFIG.pf0_msix_enabled {true}"
+    properties = properties :+ f"  CONFIG.pf0_msix_cap_table_size {01F}"
+    properties = properties :+ f"  CONFIG.pf0_msix_cap_table_offset {00008000}"
+    properties = properties :+ f"  CONFIG.pf0_msix_cap_pba_offset {00008FE0}"
+    properties = properties :+ f"  CONFIG.cfg_mgmt_if {false}"
+    properties = properties :+ f"  CONFIG.axi_bypass_64bit_en {true}"
+    properties = properties :+ f"  CONFIG.axi_bypass_prefetchable {true}"
+    properties = properties :+ f"  CONFIG.pf0_device_id {9028}"
+    properties = properties :+ f"  CONFIG.PF0_DEVICE_ID_mqdma {9028}"
+    properties = properties :+ f"  CONFIG.PF2_DEVICE_ID_mqdma {9228}"
+    properties = properties :+ f"  CONFIG.PF3_DEVICE_ID_mqdma {9328}"
+    properties = properties :+ f"  CONFIG.PF0_SRIOV_VF_DEVICE_ID {A038}"
+    properties = properties :+ f"  CONFIG.PF1_SRIOV_VF_DEVICE_ID {A138}"
+    properties = properties :+ f"  CONFIG.PF2_SRIOV_VF_DEVICE_ID {A238}"
+    properties = properties :+ f"  CONFIG.PF3_SRIOV_VF_DEVICE_ID {A338}"
 
     properties.foreach { x =>
       if (x != "") {
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
       }
     }
     property = property.concat(f"] [get_ips xdma_${config.name}]\n")

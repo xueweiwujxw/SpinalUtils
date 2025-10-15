@@ -63,22 +63,22 @@ if { $$axisDwidthConvExist <0} {
 
     tcls = tcls :+ createCmd
 
-    var property: String = "set_property -dict [list "
+    var property: String = "set_property -dict [list \\\n"
     var properties: List[String] = List()
 
-    properties = properties :+ f"CONFIG.S_TDATA_NUM_BYTES ${conf.slaveBytes}"
-    properties = properties :+ f"CONFIG.M_TDATA_NUM_BYTES ${conf.masterBytes}"
-    properties = properties :+ f"CONFIG.HAS_TSTRB ${conf.useStrb}"
-    properties = properties :+ f"CONFIG.HAS_TKEEP ${conf.useKeep}"
-    properties = properties :+ f"CONFIG.HAS_TLAST ${conf.useLast}"
-    properties = properties :+ f"CONFIG.TID_WIDTH ${conf.tidWidth}"
-    properties = properties :+ f"CONFIG.TDEST_WIDTH ${conf.tdestWidth}"
-    properties = properties :+ f"CONFIG.TUSER_BITS_PER_BYTE ${conf.tuserWidth}"
-    properties = properties :+ f"CONFIG.HAS_MI_TKEEP ${(conf.slaveBytes < conf.masterBytes).toInt}"
+    properties = properties :+ f"  CONFIG.S_TDATA_NUM_BYTES ${conf.slaveBytes}"
+    properties = properties :+ f"  CONFIG.M_TDATA_NUM_BYTES ${conf.masterBytes}"
+    properties = properties :+ f"  CONFIG.HAS_TSTRB ${conf.useStrb}"
+    properties = properties :+ f"  CONFIG.HAS_TKEEP ${conf.useKeep}"
+    properties = properties :+ f"  CONFIG.HAS_TLAST ${conf.useLast}"
+    properties = properties :+ f"  CONFIG.TID_WIDTH ${conf.tidWidth}"
+    properties = properties :+ f"  CONFIG.TDEST_WIDTH ${conf.tdestWidth}"
+    properties = properties :+ f"  CONFIG.TUSER_BITS_PER_BYTE ${conf.tuserWidth}"
+    properties = properties :+ f"  CONFIG.HAS_MI_TKEEP ${(conf.slaveBytes < conf.masterBytes).toInt}"
 
     properties.foreach { x =>
       if (x != "")
-        property = property.concat(x) + " "
+        property = property.concat(x) + " \\\n"
     }
     property = property.concat(f"] [get_ips axis_dwidth_converter_${conf.name}]")
 
